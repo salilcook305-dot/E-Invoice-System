@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Invoice {{ invoice.invoice_number }}</title>
+<style>
+    @page {
+        size: a4 portrait;
+        margin: 1.5cm;
+        @bottom-right {
+            content: "Page " counter(page) " of " counter(pages);
+            font-size: 8pt;
+            color: #718096;
+        }
+    }
+    body {
+        font-family: Helvetica, Arial, sans-serif;
+        color: #2D3748;
+        font-size: 10pt;
+        line-height: 1.4;
+    }
+    .header-table {
+        width: 100%;
+        margin-bottom: 25px;
+    }
+    .company-title {
+        font-size: 20pt;
+        font-weight: bold;
+        color: #1A365D;
+    }
+    .company-subtitle {
+        font-size: 9pt;
+        color: #718096;
+    }
+    .invoice-title-badge {
+        text-align: right;
+    }
+    .invoice-h1 {
+        font-size: 24pt;
+        font-weight: bold;
+        color: #2B6CB0;
+        margin: 0;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        font-size: 9pt;
+        font-weight: bold;
+        border-radius: 4px;
+        background-color: #E2E8F0;
+        color: #2D3748;
+    }
+    .meta-table {
+        width: 100%;
+        margin-bottom: 20px;
+        background-color: #F7FAFC;
+        border: 1px solid #E2E8F0;
+        padding: 10px;
+        border-radius: 6px;
+    }
+    .client-title {
+        font-size: 11pt;
+        font-weight: bold;
+        color: #2B6CB0;
+        margin-bottom: 4px;
+    }
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        margin-bottom: 20px;
+    }
+    .items-table th {
+        background-color: #2B6CB0;
+        color: #FFFFFF;
+        text-align: left;
+        padding: 8px 10px;
+        font-size: 9pt;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .items-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #E2E8F0;
+        font-size: 9pt;
+    }
+    .text-right {
+        text-align: right;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .totals-table {
+        width: 45%;
+        margin-left: auto;
+        border-collapse: collapse;
+        margin-bottom: 25px;
+    }
+    .totals-table td {
+        padding: 6px 8px;
+        font-size: 9.5pt;
+    }
+    .grand-total-row td {
+        font-size: 12pt;
+        font-weight: bold;
+        color: #1A365D;
+        border-top: 2px solid #2B6CB0;
+        border-bottom: 2px solid #2B6CB0;
+        padding: 8px;
+    }
+    .security-box {
+        margin-top: 30px;
+        border: 1px dashed #4A5568;
+        background-color: #EDF2F7;
+        padding: 12px;
+        border-radius: 4px;
+    }
+    .security-title {
+        font-size: 9pt;
+        font-weight: bold;
+        color: #2C5282;
+        margin-bottom: 4px;
+    }
+    .hash-text {
+        font-family: Courier, monospace;
+        font-size: 8pt;
+        color: #2D3748;
+        word-break: break-all;
+    }
+    .footer-note {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 8pt;
+        color: #A0AEC0;
+    }
+</style>
+</head>
+<body>
+
+<table class="header-table">
+    <tr>
+        <td style="width: 55%; vertical-align: top;">
+            <div class="company-title">AI SAMRAT ENTERPRISES</div>
+            <div class="company-subtitle">Electronic Invoicing &amp; Digital B2B Billing</div>
+            <div style="font-size: 8.5pt; color: #4A5568; margin-top: 4px;">
+                GSTIN: 29AABCU9603R1ZM<br>
+                Tech Park, Outer Ring Road, Bengaluru, Karnataka 560103<br>
+                contact@eis.local | +91 (80) 4123-9900
+            </div>
+        </td>
+        <td class="invoice-title-badge" style="width: 45%; vertical-align: top;">
+            <div class="invoice-h1">TAX INVOICE</div>
+            <div style="margin-top: 6px; font-size: 11pt; font-weight: bold; color: #2D3748;">
+                # {{ invoice.invoice_number }}
+            </div>
+            <div style="margin-top: 4px;">
+                <span class="status-badge">STATUS: {{ invoice.status }}</span>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<table class="meta-table">
+    <tr>
+        <td style="width: 50%; vertical-align: top;">
+            <div class="client-title">BILLED TO (CUSTOMER):</div>
+            <strong>{{ invoice.customer.name }}</strong><br>
+            {{ invoice.customer.billing_address|default:"Address on file" }}<br>
+            Email: {{ invoice.customer.email }}<br>
+            Phone: {{ invoice.customer.phone|default:"N/A" }}<br>
+            GSTIN: <strong>{{ invoice.customer.gstin|default:"Unregistered / Consumer" }}</strong>
+        </td>
+        <td style="width: 50%; vertical-align: top; text-align: right;">
+            <div class="client-title">INVOICE DETAILS:</div>
+            <strong>Invoice Date:</strong> {{ invoice.issue_date|date:"d M Y" }}<br>
+            <strong>Due Date:</strong> {{ invoice.due_date|date:"d M Y" }}<br>
+            <strong>Created By:</strong> {{ invoice.created_by.username|default:"System" }}<br>
+            <strong>Currency:</strong> INR (Indian Rupees)
+        </td>
+    </tr>
+</table>
+
+<table class="items-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 40%;">Item &amp; Description</th>
+            <th class="text-right" style="width: 15%;">Unit Price</th>
+            <th class="text-center" style="width: 10%;">Qty</th>
+            <th class="text-center" style="width: 10%;">GST %</th>
+            <th class="text-right" style="width: 20%;">Total (INR)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in invoice.items.all %}
+        <tr>
+            <td style="color: #718096;">{{ forloop.counter }}</td>
+            <td>
+                <strong>{{ item.product.name }}</strong>
+                {% if item.description %}
+                <div style="font-size: 8pt; color: #718096;">{{ item.description }}</div>
+                {% endif %}
+            </td>
+            <td class="text-right">INR {{ item.unit_price|floatformat:2 }}</td>
+            <td class="text-center">{{ item.quantity }}</td>
+            <td class="text-center">{{ item.gst_rate }}%</td>
+            <td class="text-right">INR {{ item.total_amount|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<table class="totals-table">
+    <tr>
+        <td>Subtotal (Taxable):</td>
+        <td class="text-right">INR {{ invoice.subtotal|floatformat:2 }}</td>
+    </tr>
+    <tr>
+        <td>CGST / SGST Tax:</td>
+        <td class="text-right">INR {{ invoice.tax_amount|floatformat:2 }}</td>
+    </tr>
+    {% if invoice.discount_amount > 0 %}
+    <tr>
+        <td>Discount:</td>
+        <td class="text-right">- INR {{ invoice.discount_amount|floatformat:2 }}</td>
+    </tr>
+    {% endif %}
+    <tr class="grand-total-row">
+        <td>Total Amount:</td>
+        <td class="text-right">INR {{ invoice.total_amount|floatformat:2 }}</td>
+    </tr>
+    <tr>
+        <td><strong>Amount Paid:</strong></td>
+        <td class="text-right" style="color: #276749;">INR {{ invoice.paid_amount|floatformat:2 }}</td>
+    </tr>
+    <tr>
+        <td><strong>Balance Due:</strong></td>
+        <td class="text-right" style="color: #C53030; font-weight: bold;">INR {{ invoice.balance_remaining|floatformat:2 }}</td>
+    </tr>
+</table>
+
+{% if invoice.notes %}
+<div style="margin-top: 10px; font-size: 8.5pt; color: #4A5568;">
+    <strong>Notes / Payment Terms:</strong><br>
+    {{ invoice.notes }}
+</div>
+{% endif %}
+
+<div class="security-box">
+    <div class="security-title">[AUTHENTICATED] TAMPER-PROOF DIGITAL CERTIFICATION &amp; INTEGRITY HASH</div>
+    <div style="font-size: 8pt; color: #4A5568; margin-bottom: 3px;">
+        This invoice is digitally fingerprinted using an immutable SHA-256 cryptographic digest. Any alteration to amounts, dates, or items invalidates this document.
+    </div>
+    <div class="hash-text">
+        <strong>SHA-256 HASH:</strong> {{ invoice.pdf_hash|default:"COMPUTED-UPON-FINALIZATION" }}
+    </div>
+    <div style="font-size: 7.5pt; color: #718096; margin-top: 4px;">
+        Verify authenticity anytime at: <strong>https://eis.local/verify</strong> or using the built-in EIS Verification Engine.
+    </div>
+</div>
+
+<div class="footer-note">
+    Electronic Invoice generated automatically by EIS (AI Samrat Project) • Computer generated document, valid without physical signature.
+</div>
+
+</body>
+</html>
